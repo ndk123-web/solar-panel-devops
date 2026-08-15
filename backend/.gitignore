@@ -1,0 +1,21 @@
+# Maven build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+
+# Database & SQLite
+*.db
+*.db-journal
+solar_plant.db
+
+# IDE & OS
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+Thumbs.db
