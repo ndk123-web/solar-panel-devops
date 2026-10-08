@@ -136,8 +136,8 @@ pipeline {
         stage('10. Docker Health Check Verification') {
             steps {
                 echo "===> Verifying containerized application health..."
-                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:$env:BACKEND_HOST_PORT/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Backend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
-                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:$env:FRONTEND_HOST_PORT\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Frontend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
+                bat 'powershell -NoProfile -Command "$uri = \'http://localhost:\' + $env:BACKEND_HOST_PORT + \'/api/health\'; $deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Backend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
+                bat 'powershell -NoProfile -Command "$uri = \'http://localhost:\' + $env:FRONTEND_HOST_PORT; $deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri $uri -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Frontend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
             }
         }
     }
