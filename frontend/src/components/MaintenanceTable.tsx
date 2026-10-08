@@ -151,7 +151,7 @@ export const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{record.location}</div>
                   </td>
 
-                  <td style={{ padding: '14px 16px', maxW: '240px' }}>
+                  <td style={{ padding: '14px 16px', maxWidth: '240px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{record.issueTitle}</div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px' }}>
                       {record.description}

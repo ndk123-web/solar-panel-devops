@@ -25,10 +25,22 @@ pipeline {
             steps {
                 echo "===> Verifying Build Tools & Java Environment..."
                 bat 'java -version'
+                bat 'node --version'
+                bat 'npm --version'
             }
         }
 
-        stage('3. Backend Maven Build') {
+        stage('3. Frontend Build') {
+            steps {
+                dir('frontend') {
+                    echo "===> Building Next.js frontend..."
+                    bat 'npm ci'
+                    bat 'npm run build'
+                }
+            }
+        }
+
+        stage('4. Backend Maven Build') {
             steps {
                 dir('backend') {
                     echo "===> Compiling Java Spring Boot backend classes..."
@@ -37,7 +49,7 @@ pipeline {
             }
         }
 
-        stage('4. Automated JUnit Testing') {
+        stage('5. Automated JUnit Testing') {
             steps {
                 dir('backend') {
                     echo "===> Running automated backend unit tests..."
@@ -51,7 +63,7 @@ pipeline {
             }
         }
 
-        stage('5. Package WAR Artefact') {
+        stage('6. Package WAR Artefact') {
             steps {
                 dir('backend') {
                     echo "===> Packaging Spring Boot application into WAR for Tomcat deployment target..."
@@ -60,7 +72,28 @@ pipeline {
             }
         }
 
-        stage('6. Server Deployment (Tomcat / Nginx)') {
+        stage('7. Selenium Browser Testing') {
+            steps {
+                script {
+                    echo "===> Starting backend and frontend for Selenium browser tests..."
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath ''cmd.exe'' -ArgumentList ''/c mvnw.cmd spring-boot:run'' -WorkingDirectory ''backend'' -PassThru -WindowStyle Hidden; Set-Content -Path .backend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath ''cmd.exe'' -ArgumentList ''/c npm run start'' -WorkingDirectory ''frontend'' -PassThru -WindowStyle Hidden; Set-Content -Path .frontend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri ''http://localhost:8080/api/health'' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri ''http://localhost:3000'' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
+                    dir('backend') {
+                        bat 'mvnw.cmd -Pselenium test'
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+                    bat 'powershell -NoProfile -Command "if (Test-Path .backend.pid) { Stop-Process -Id (Get-Content .backend.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .backend.pid }; if (Test-Path .frontend.pid) { Stop-Process -Id (Get-Content .frontend.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .frontend.pid }"'
+                }
+            }
+        }
+
+        stage('8. Server Deployment (Tomcat / Nginx)') {
             steps {
                 echo "===> Deploying ${WAR_NAME} to ${params.TARGET_ENV} server at ${params.TOMCAT_WEBAPPS_DIR}..."
                 script {
@@ -80,7 +113,7 @@ pipeline {
             }
         }
 
-        stage('7. Health Check Verification') {
+        stage('9. Health Check Verification') {
             steps {
                 echo "===> Verifying Application Health Status..."
                 script {
