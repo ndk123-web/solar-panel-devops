@@ -169,6 +169,43 @@ npm run dev
 ```
 > Open browser at `http://localhost:3000`.
 
+### 3. Running the Docker deployment
+
+Build the backend WAR before creating the Docker images:
+
+```powershell
+cd "d:\Full Stack Projects\solar-panel-devops\backend"
+.\mvnw.cmd package -DskipTests
+
+cd ..
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+The Docker Compose deployment exposes:
+
+- Frontend: `http://localhost:3000`
+- Backend health: `http://localhost:8080/api/health`
+
+The frontend container uses `BACKEND_URL=http://backend:8080` so it reaches
+the backend through the Compose service network. SQLite data is persisted in
+the `solar_backend_data` named volume.
+
+Useful lifecycle commands:
+
+```powershell
+docker compose logs -f
+docker compose restart
+docker compose stop
+docker compose start
+docker compose down
+```
+
+The Jenkins pipeline runs Docker image build and Compose deployment after the
+JUnit and Selenium quality gates pass. Jenkins itself must use a different
+port, such as `8081`, because the backend container publishes port `8080`.
+
 ---
 
 ## 📜 Academic Verification & Lab-4 Checklist

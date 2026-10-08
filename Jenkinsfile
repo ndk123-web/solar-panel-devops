@@ -11,6 +11,7 @@ pipeline {
         JAVA_HOME = "C:/Program Files/Java/jdk-21.0.11"
         PATH = "${JAVA_HOME}/bin;${env.PATH}"
         WAR_NAME = "solar-plant-portal.war"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -27,6 +28,8 @@ pipeline {
                 bat 'java -version'
                 bat 'node --version'
                 bat 'npm --version'
+                bat 'docker --version'
+                bat 'docker info'
             }
         }
 
@@ -113,12 +116,24 @@ pipeline {
             }
         }
 
-        stage('9. Health Check Verification') {
+        stage('9. Docker Image Build and Deployment') {
             steps {
-                echo "===> Verifying Application Health Status..."
-                script {
-                    echo "Health endpoint URL: http://localhost:${params.DEPLOY_PORT}/api/health"
+                echo "===> Building and deploying versioned Docker images..."
+                bat 'docker compose build'
+                bat 'docker compose up -d --force-recreate'
+            }
+            post {
+                always {
+                    bat 'docker compose ps'
                 }
+            }
+        }
+
+        stage('10. Docker Health Check Verification') {
+            steps {
+                echo "===> Verifying containerized application health..."
+                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:8080/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Backend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
+                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:3000\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Frontend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
             }
         }
     }

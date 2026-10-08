@@ -1,0 +1,35 @@
+services:
+  backend:
+    image: solar-panel-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    container_name: solar-backend
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:sqlite:/app/data/solar_plant.db
+    ports:
+      - "8080:8080"
+    volumes:
+      - solar_backend_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    image: solar-panel-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+    container_name: solar-frontend
+    environment:
+      BACKEND_URL: http://backend:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  solar_backend_data:

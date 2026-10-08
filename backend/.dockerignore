@@ -1,0 +1,6 @@
+target/*
+!target/solar-plant-portal.war
+*.db
+*.db-journal
+.idea
+.git
