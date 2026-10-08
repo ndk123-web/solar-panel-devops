@@ -76,10 +76,10 @@ pipeline {
             steps {
                 script {
                     echo "===> Starting backend and frontend for Selenium browser tests..."
-                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c mvnw.cmd spring-boot:run\' -WorkingDirectory \'backend\' -PassThru -WindowStyle Hidden; Set-Content -Path .backend.pid -Value $p.Id"'
-                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c npm run start\' -WorkingDirectory \'frontend\' -PassThru -WindowStyle Hidden; Set-Content -Path .frontend.pid -Value $p.Id"'
-                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:8080/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
-                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:3000\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c mvnw.cmd spring-boot:run ^> ..\\backend-startup.log 2^>^&1\' -WorkingDirectory \'backend\' -PassThru -WindowStyle Hidden; Set-Content -Path .backend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c npm run start ^> ..\\frontend-startup.log 2^>^&1\' -WorkingDirectory \'frontend\' -PassThru -WindowStyle Hidden; Set-Content -Path .frontend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:8080/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); Write-Error \'Backend health check timed out. Backend startup log:\'; if (Test-Path backend-startup.log) { Get-Content backend-startup.log }; exit 1"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:3000\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); Write-Error \'Frontend health check timed out. Frontend startup log:\'; if (Test-Path frontend-startup.log) { Get-Content frontend-startup.log }; exit 1"'
                     dir('backend') {
                         bat 'mvnw.cmd -Pselenium test'
                     }
@@ -88,7 +88,7 @@ pipeline {
             post {
                 always {
                     junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
-                    bat 'powershell -NoProfile -Command "if (Test-Path .backend.pid) { Stop-Process -Id (Get-Content .backend.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .backend.pid }; if (Test-Path .frontend.pid) { Stop-Process -Id (Get-Content .frontend.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .frontend.pid }"'
+                    bat 'powershell -NoProfile -Command "foreach ($file in @(\'.backend.pid\', \'.frontend.pid\')) { if (Test-Path $file) { $processId = Get-Content $file; Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue; Remove-Item $file -Force } }"'
                 }
             }
         }
