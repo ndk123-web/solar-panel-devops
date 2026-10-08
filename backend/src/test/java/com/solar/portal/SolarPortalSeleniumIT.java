@@ -39,11 +39,17 @@ class SolarPortalSeleniumIT {
         wait.until(ExpectedConditions.titleContains("Solar"));
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//*[contains(normalize-space(), 'Solar Plant Maintenance Portal')]")));
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.tagName("body"), "Backend (Spring Boot): ONLINE"));
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.tagName("body"), "SOLAR-PLANT-01"));
 
         String pageText = driver.findElement(By.tagName("body")).getText();
-        assertTrue(pageText.contains("Maintenance"));
-        assertTrue(pageText.contains("Backend (Spring Boot): ONLINE"));
-        assertTrue(pageText.contains("SOLAR-PLANT-01"));
+        assertTrue(pageText.contains("Maintenance"), "Maintenance section was not rendered");
+        assertTrue(pageText.contains("Backend (Spring Boot): ONLINE"),
+                "Backend status did not become ONLINE. Page text: " + pageText);
+        assertTrue(pageText.contains("SOLAR-PLANT-01"),
+                "Expected seeded maintenance record was not rendered. Page text: " + pageText);
     }
 
     @Test
@@ -55,10 +61,14 @@ class SolarPortalSeleniumIT {
                 By.cssSelector("input[placeholder='Search Plant ID, Location, Issue...']"));
         search.sendKeys("SOLAR-PLANT-02");
 
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.tagName("body"), "SOLAR-PLANT-02"));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(
                 By.xpath("//tr[.//*[normalize-space()='SOLAR-PLANT-01']]")));
         String pageText = driver.findElement(By.tagName("body")).getText();
-        assertTrue(pageText.contains("SOLAR-PLANT-02"));
-        assertTrue(!pageText.contains("SOLAR-PLANT-01"));
+        assertTrue(pageText.contains("SOLAR-PLANT-02"),
+                "Search result was not rendered. Page text: " + pageText);
+        assertTrue(!pageText.contains("SOLAR-PLANT-01"),
+                "Non-matching record remained visible. Page text: " + pageText);
     }
 }
