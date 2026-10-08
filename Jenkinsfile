@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        JAVA_HOME = "C:/Users/Navnath/.antigravity-ide/extensions/redhat.java-1.55.0-win32-x64/jre/21.0.11-win32-x86_64"
+        JAVA_HOME = "C:/Program Files/Java/jdk-21.0.11"
         PATH = "${JAVA_HOME}/bin;${env.PATH}"
         WAR_NAME = "solar-plant-portal.war"
     }
