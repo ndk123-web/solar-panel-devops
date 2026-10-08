@@ -76,10 +76,10 @@ pipeline {
             steps {
                 script {
                     echo "===> Starting backend and frontend for Selenium browser tests..."
-                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath ''cmd.exe'' -ArgumentList ''/c mvnw.cmd spring-boot:run'' -WorkingDirectory ''backend'' -PassThru -WindowStyle Hidden; Set-Content -Path .backend.pid -Value $p.Id"'
-                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath ''cmd.exe'' -ArgumentList ''/c npm run start'' -WorkingDirectory ''frontend'' -PassThru -WindowStyle Hidden; Set-Content -Path .frontend.pid -Value $p.Id"'
-                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri ''http://localhost:8080/api/health'' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
-                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri ''http://localhost:3000'' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c mvnw.cmd spring-boot:run\' -WorkingDirectory \'backend\' -PassThru -WindowStyle Hidden; Set-Content -Path .backend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$p = Start-Process -FilePath \'cmd.exe\' -ArgumentList \'/c npm run start\' -WorkingDirectory \'frontend\' -PassThru -WindowStyle Hidden; Set-Content -Path .frontend.pid -Value $p.Id"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:8080/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
+                    bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:3000\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); exit 1"'
                     dir('backend') {
                         bat 'mvnw.cmd -Pselenium test'
                     }
