@@ -185,7 +185,7 @@ docker compose ps
 
 The Docker Compose deployment exposes:
 
-- Frontend: `http://localhost:3000`
+- Frontend: `http://localhost:3001`
 - Backend health: `http://localhost:8082/api/health`
 
 The frontend container uses `BACKEND_URL=http://backend:8080` so it reaches
@@ -203,9 +203,10 @@ docker compose down
 ```
 
 The Jenkins pipeline runs Docker image build and Compose deployment after the
-JUnit and Selenium quality gates pass. Jenkins itself must use a different
-port, such as `8081`. The Docker backend publishes host port `8082` and keeps
-container port `8080` internally.
+JUnit and Selenium quality gates pass. Jenkins itself must use a different port, such as `8081`. The Docker backend
+publishes host port `8082` and keeps container port `8080` internally. The
+Docker frontend publishes host port `3001` and keeps container port `3000`
+internally.
 
 ---
 
