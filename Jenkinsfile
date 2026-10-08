@@ -5,6 +5,7 @@ pipeline {
         choice(name: 'TARGET_ENV', choices: ['STAGING', 'PRODUCTION', 'DEVELOPMENT'], description: 'Deployment Target Environment')
         string(name: 'TOMCAT_WEBAPPS_DIR', defaultValue: 'C:/Program Files/Apache Software Foundation/Tomcat 10.1/webapps', description: 'Target Tomcat Webapps Directory')
         string(name: 'DEPLOY_PORT', defaultValue: '8080', description: 'Application Server Port')
+        string(name: 'DOCKER_BACKEND_PORT', defaultValue: '8082', description: 'Host port for the Docker backend container')
     }
 
     environment {
@@ -12,6 +13,7 @@ pipeline {
         PATH = "${JAVA_HOME}/bin;${env.PATH}"
         WAR_NAME = "solar-plant-portal.war"
         IMAGE_TAG = "${BUILD_NUMBER}"
+        BACKEND_HOST_PORT = "${params.DOCKER_BACKEND_PORT}"
     }
 
     stages {
@@ -132,7 +134,7 @@ pipeline {
         stage('10. Docker Health Check Verification') {
             steps {
                 echo "===> Verifying containerized application health..."
-                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:8080/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Backend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
+                bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:${params.DOCKER_BACKEND_PORT}/api/health\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Backend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
                 bat 'powershell -NoProfile -Command "$deadline = (Get-Date).AddMinutes(2); do { try { $r = Invoke-WebRequest -Uri \'http://localhost:3000\' -UseBasicParsing -TimeoutSec 5; if ($r.StatusCode -eq 200) { Write-Host \'Frontend container is healthy\'; exit 0 } } catch {}; Start-Sleep -Seconds 3 } while ((Get-Date) -lt $deadline); docker compose logs; exit 1"'
             }
         }
